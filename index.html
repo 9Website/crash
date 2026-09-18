@@ -3,63 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>10M Crash</title>
+  <title>10M Instant Crash</title>
   <style>
-    body {
-      margin: 0;
-      background: #000;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-family: sans-serif;
-    }
+    body { margin: 0; background: #000; overflow: hidden; }
     button {
-      padding: 20px 40px;
-      font-size: 24px;
-      cursor: pointer;
-      background: #fff;
-      border: none;
-      border-radius: 4px;
-    }
-    button:disabled {
-      background: #333;
-      color: #666;
-      cursor: not-allowed;
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      padding: 20px 40px; font-size: 24px; cursor: pointer; z-index: 10;
+      background: #fff; border: none; border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <button id="btn">Load</button>
+  <button id="btn" onclick="load()">Load</button>
 
   <script>
-    const btn = document.getElementById('btn');
-    const COUNT = 10_000_000; // 10 million
-
-    btn.onclick = () => {
-      btn.disabled = true;
-      btn.textContent = 'Loading...';
-
-      // Use a tiny canvas to force GPU rasterization of millions of points
+    function load() {
+      document.body.innerHTML = ''; // Clear everything, including the button
+      const COUNT = 10_000_000; // 10 million
+      
+      // Create a full-screen canvas
       const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#fff';
 
+      // THIS IS THE KILLER: Synchronous, blocking, no yielding.
+      // It will lock the thread instantly.
       for (let i = 0; i < COUNT; i++) {
         ctx.fillRect(
-          Math.random() * window.innerWidth,
-          Math.random() * window.innerHeight,
+          Math.random() * canvas.width,
+          Math.random() * canvas.height,
           1, 1
         );
       }
-
-      // Attach the canvas to the DOM to force the browser to render it
-      document.body.appendChild(canvas);
-      btn.textContent = 'Loaded';
-    };
+    }
   </script>
 </body>
 </html>
