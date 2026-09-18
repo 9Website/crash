@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>50 Million Particles Flow Simulation</title>
+    <title>100 Million Particles Flow Simulation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -46,18 +46,18 @@
     <div id="ui-overlay" class="relative z-10 flex flex-col items-center justify-center p-8 max-w-md w-full glass-panel rounded-3xl shadow-2xl transition-all duration-700">
         <div class="mb-6 text-center">
             <span class="px-3 py-1 text-xs font-semibold uppercase tracking-widest bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20">
-                GPU Accelerated WebGL
+                Extreme GPU Acceleration
             </span>
             <h1 class="text-3xl font-extrabold mt-4 tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
                 Flow Simulation
             </h1>
             <p class="text-sm text-gray-400 mt-2">
-                Experience 50,000,000 glowing particles orchestrated in real-time through dynamic vector fields inspired by david.li/flow.
+                Loading 100,000,000 massive glowing particles orchestrated through high-density vector flow fields.
             </p>
         </div>
 
         <button id="load-btn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold shadow-lg glow-btn transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center space-x-2">
-            <span>Load 50 Million Particles</span>
+            <span>Load 100 Million Particles</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
 
@@ -65,14 +65,14 @@
             <div class="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden">
                 <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2.5 rounded-full w-0 transition-all duration-300"></div>
             </div>
-            <p id="loading-status" class="text-xs font-medium text-gray-400 tracking-wider uppercase animate-pulse">Allocating GPU Buffers...</p>
+            <p id="loading-status" class="text-xs font-medium text-gray-400 tracking-wider uppercase animate-pulse">Allocating VRAM Buffers...</p>
         </div>
     </div>
 
     <div id="hud" class="hidden absolute top-6 left-6 z-10 glass-panel px-5 py-3 rounded-2xl flex items-center space-x-4 shadow-lg">
         <div>
             <div class="text-[10px] uppercase tracking-widest text-gray-400">Particles</div>
-            <div class="text-sm font-bold text-blue-400">50,000,000</div>
+            <div class="text-sm font-bold text-blue-400">100,000,000</div>
         </div>
         <div class="h-8 w-px bg-white/10"></div>
         <div>
@@ -82,7 +82,6 @@
     </div>
 
     <script>
-        // Custom Shader Material for 50 Million Particle Point Cloud with Glow & Flow
         const vertexShader = `
             uniform float uTime;
             uniform float uTransition;
@@ -91,7 +90,6 @@
             varying vec3 vColor;
             varying float vAlpha;
 
-            // Simplex noise approximation for curl flow motion
             vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
             vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
             vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -172,8 +170,8 @@
                 vec4 mvPosition = modelViewMatrix * vec4(mixedPos, 1.0);
                 gl_Position = projectionMatrix * mvPosition;
 
-                // Increased base particle sizing for larger appearance
-                gl_PointSize = (6.0 * (2.0 + aRandoms.x)) / (-mvPosition.z);
+                // Prominent high-visibility particle scaling
+                gl_PointSize = (7.0 * (2.2 + aRandoms.x)) / (-mvPosition.z);
 
                 float dist = length(mixedPos) / 40.0;
                 vColor = mix(vec3(0.1, 0.6, 1.0), vec3(0.8, 0.2, 0.9), clamp(dist, 0.0, 1.0));
@@ -232,8 +230,8 @@
         }
 
         function generateParticles() {
-            // 50 Million particles configured across buffer attributes
-            const count = 50000000;
+            // 100 Million particles configuration (Allocates ~1.2GB+ raw buffer data on GPU VRAM)
+            const count = 100000000;
             
             particleGeometry = new THREE.BufferGeometry();
             
@@ -295,11 +293,11 @@
 
             let progress = 0;
             const interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 12) + 8;
+                progress += Math.floor(Math.random() * 8) + 4;
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(interval);
-                    loadingStatus.textContent = "Compiling Shaders & Buffers...";
+                    loadingStatus.textContent = "Compiling 100M Shaders & Massive VRAM Buffers...";
                     
                     setTimeout(() => {
                         if (!particleSystem) {
@@ -313,12 +311,12 @@
                             clock.start();
                             animate();
                         }, 500);
-                    }, 400);
+                    }, 600);
                 }
                 progressBar.style.width = progress + '%';
-                if (progress > 60) loadingStatus.textContent = "Allocating 50M Particle GPU Memory...";
-                else if (progress > 30) loadingStatus.textContent = "Computing Vector Flow Fields...";
-            }, 180);
+                if (progress > 60) loadingStatus.textContent = "Allocating 100M Particle VRAM Arrays...";
+                else if (progress > 30) loadingStatus.textContent = "Constructing Multi-Threaded Vortex Fields...";
+            }, 200);
         });
 
         function onWindowResize() {
@@ -349,7 +347,7 @@
             const elapsedTime = clock.getElapsedTime();
             
             if (targetTransition < 1.0) {
-                targetTransition += 0.008;
+                targetTransition += 0.005;
                 if (targetTransition > 1.0) targetTransition = 1.0;
                 particleMaterial.uniforms.uTransition.value = targetTransition;
             }
@@ -359,8 +357,8 @@
             targetRotationX += (mouseY * 0.5 - targetRotationX) * 0.05;
             targetRotationY += (mouseX * 0.5 - targetRotationY) * 0.05;
 
-            particleSystem.rotation.x = targetRotationX + elapsedTime * 0.04;
-            particleSystem.rotation.y = targetRotationY + elapsedTime * 0.06;
+            particleSystem.rotation.x = targetRotationX + elapsedTime * 0.03;
+            particleSystem.rotation.y = targetRotationY + elapsedTime * 0.05;
 
             renderer.render(scene, camera);
 
