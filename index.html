@@ -3,72 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Particle Crasher</title>
+  <title>10M Crash</title>
   <style>
-    body { margin: 0; overflow: hidden; background: #000; }
-    canvas { display: block; }
-    #controls {
-      position: fixed; top: 10px; left: 10px; z-index: 999;
-      background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px;
-      color: #fff; font-family: sans-serif;
+    body {
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: sans-serif;
     }
     button {
-      padding: 8px 16px; font-size: 14px; cursor: pointer;
-      background: #f00; color: #fff; border: none; border-radius: 4px;
+      padding: 20px 40px;
+      font-size: 24px;
+      cursor: pointer;
+      background: #fff;
+      border: none;
+      border-radius: 4px;
     }
-    button:disabled { background: #555; }
+    button:disabled {
+      background: #333;
+      color: #666;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
-  <div id="controls">
-    <button id="loadBtn">Load Particles</button>
-    <div id="status" style="margin-top:6px;font-size:12px;">Ready</div>
-  </div>
-  <canvas id="c"></canvas>
+  <button id="btn">Load</button>
 
   <script>
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d');
-    const btn = document.getElementById('loadBtn');
-    const status = document.getElementById('status');
+    const btn = document.getElementById('btn');
+    const COUNT = 10_000_000; // 10 million
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    btn.addEventListener('click', () => {
-      // Randomly pick 1M, 2M, or 10M
-      const count = [1e6, 2e6, 1e7][Math.floor(Math.random() * 3)];
+    btn.onclick = () => {
       btn.disabled = true;
-      status.textContent = `Loading ${count.toLocaleString()} particles...`;
+      btn.textContent = 'Loading...';
 
-      // Use requestAnimationFrame to avoid blocking the UI thread
-      // and to allow the browser to update the status message.
-      requestAnimationFrame(() => {
-        // Pre-allocate a typed array to force memory allocation upfront
-        const positions = new Float32Array(count * 2);
-        for (let i = 0; i < count * 2; i += 2) {
-          positions[i]     = Math.random() * canvas.width;   // x
-          positions[i + 1] = Math.random() * canvas.height;  // y
-        }
+      // Use a tiny canvas to force GPU rasterization of millions of points
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
 
-        // Force GPU allocation by drawing all particles
-        ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < count; i++) {
-          ctx.fillRect(
-            positions[i * 2],
-            positions[i * 2 + 1],
-            1, 1
-          );
-        }
+      for (let i = 0; i < COUNT; i++) {
+        ctx.fillRect(
+          Math.random() * window.innerWidth,
+          Math.random() * window.innerHeight,
+          1, 1
+        );
+      }
 
-        status.textContent = `Done. ${count.toLocaleString()} particles drawn.`;
-        btn.disabled = false;
-      });
-    });
+      // Attach the canvas to the DOM to force the browser to render it
+      document.body.appendChild(canvas);
+      btn.textContent = 'Loaded';
+    };
   </script>
 </body>
 </html>
