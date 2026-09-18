@@ -1,248 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Utilitarian Particle Test Tool</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background-color: #000000;
-            color: #888888;
-            font-family: monospace;
-            margin: 0;
-            padding: 0;
-            border: 0;
-        }
-        input[type="range"] {
-            accent-color: #444444;
-        }
-        input[type="number"] {
-            background-color: #111111;
-            color: #cccccc;
-            border: 1px solid #333333;
-            border-radius: 0;
-        }
-        button {
-            border-radius: 0 !important;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle Crasher</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+    #controls {
+      position: fixed; top: 10px; left: 10px; z-index: 999;
+      background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px;
+      color: #fff; font-family: sans-serif;
+    }
+    button {
+      padding: 8px 16px; font-size: 14px; cursor: pointer;
+      background: #f00; color: #fff; border: none; border-radius: 4px;
+    }
+    button:disabled { background: #555; }
+  </style>
 </head>
-<body class="bg-black text-gray-400 font-mono text-xs flex flex-col h-screen overflow-hidden">
+<body>
+  <div id="controls">
+    <button id="loadBtn">Load Particles</button>
+    <div id="status" style="margin-top:6px;font-size:12px;">Ready</div>
+  </div>
+  <canvas id="c"></canvas>
 
-    <header class="border-b border-neutral-800 p-2 flex justify-between items-center bg-black">
-        <div>SYSTEM DIAGNOSTIC TOOL // PARTICLE PERFORMANCE BENCHMARK</div>
-        <div id="fps-display" class="text-white font-bold">FPS: 00.0</div>
-    </header>
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const btn = document.getElementById('loadBtn');
+    const status = document.getElementById('status');
 
-    <div class="flex flex-1 overflow-hidden">
-        
-        <!-- Left Panel: Controls and Log -->
-        <div class="w-80 border-r border-neutral-800 flex flex-col bg-black">
-            
-            <!-- Controls Section -->
-            <div class="p-3 border-b border-neutral-800 space-y-3">
-                <div>
-                    <label for="particle-count-slider" class="block mb-1 text-gray-500">PARTICLE COUNT: <span id="count-label" class="text-white">100000</span></label>
-                    <input type="range" id="particle-count-slider" min="1" max="5000000" step="1000" value="100000" class="w-full h-1 bg-neutral-800 appearance-none cursor-pointer">
-                </div>
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-                <div class="flex space-x-2">
-                    <input type="number" id="particle-count-input" min="1" max="5000000" value="100000" class="w-full px-2 py-1 text-xs focus:outline-none">
-                    <button id="set-btn" class="bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 px-3 py-1 text-white">SET</button>
-                </div>
+    btn.addEventListener('click', () => {
+      // Randomly pick 1M, 2M, or 10M
+      const count = [1e6, 2e6, 1e7][Math.floor(Math.random() * 3)];
+      btn.disabled = true;
+      status.textContent = `Loading ${count.toLocaleString()} particles...`;
 
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button id="toggle-btn" class="bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 py-1 text-white text-center">PAUSE</button>
-                    <button id="reset-btn" class="bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 py-1 text-white text-center">RESET</button>
-                </div>
-            </div>
-
-            <!-- Scrollable Log Section -->
-            <div class="flex-1 flex flex-col overflow-hidden p-3">
-                <div class="text-gray-600 mb-1">EXECUTION LOG</div>
-                <div id="log-container" class="flex-1 overflow-y-auto bg-neutral-950 border border-neutral-900 p-2 space-y-1 text-[10px] text-neutral-500 select-text">
-                    [00:00:00] INITIALIZED SYSTEM DIAGNOSTIC.
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Right Panel: Canvas Display -->
-        <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
-            <canvas id="render-canvas" class="block w-full h-full"></canvas>
-            <div id="stats-overlay" class="absolute top-2 left-2 pointer-events-none text-[10px] text-neutral-600 space-y-0.5">
-                <div>ACTIVE BUFFERS: <span id="stat-buffers" class="text-neutral-400">0</span></div>
-                <div>FRAME TIME: <span id="stat-frametime" class="text-neutral-400">0.0ms</span></div>
-                <div>RENDER MODE: <span class="text-neutral-400">2D_POINT_STREAM</span></div>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        const canvas = document.getElementById('render-canvas');
-        const ctx = canvas.getContext('2d');
-        
-        const slider = document.getElementById('particle-count-slider');
-        const numberInput = document.getElementById('particle-count-input');
-        const countLabel = document.getElementById('count-label');
-        const setBtn = document.getElementById('set-btn');
-        const toggleBtn = document.getElementById('toggle-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const fpsDisplay = document.getElementById('fps-display');
-        const logContainer = document.getElementById('log-container');
-        const statBuffers = document.getElementById('stat-buffers');
-        const statFrametime = document.getElementById('stat-frametime');
-
-        let targetParticleCount = 100000;
-        let isRunning = true;
-        let particles = [];
-
-        // Utility log function
-        function appendLog(message) {
-            const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
-            const entry = document.createElement('div');
-            entry.textContent = `[${timestamp}] ${message}`;
-            logContainer.appendChild(entry);
-            logContainer.scrollTop = logContainer.scrollHeight;
+      // Use requestAnimationFrame to avoid blocking the UI thread
+      // and to allow the browser to update the status message.
+      requestAnimationFrame(() => {
+        // Pre-allocate a typed array to force memory allocation upfront
+        const positions = new Float32Array(count * 2);
+        for (let i = 0; i < count * 2; i += 2) {
+          positions[i]     = Math.random() * canvas.width;   // x
+          positions[i + 1] = Math.random() * canvas.height;  // y
         }
 
-        // Initialize canvas size based on container
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
+        // Force GPU allocation by drawing all particles
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < count; i++) {
+          ctx.fillRect(
+            positions[i * 2],
+            positions[i * 2 + 1],
+            1, 1
+          );
         }
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Initialize particles efficiently using TypedArrays for scale performance
-        // To handle up to 5,000,000 smoothly without crashing memory, we use flat Float32Arrays.
-        // Format: [x, y, vx, vy, x, y, vx, vy...]
-        let particleData = new Float32Array(0);
-
-        function initParticles(count) {
-            targetParticleCount = count;
-            particleData = new Float32Array(targetParticleCount * 4);
-            const w = canvas.width || 800;
-            const h = canvas.height || 600;
-
-            for (let i = 0; i < targetParticleCount; i++) {
-                const idx = i * 4;
-                particleData[idx] = Math.random() * w;     // x
-                particleData[idx + 1] = Math.random() * h; // y
-                particleData[idx + 2] = (Math.random() - 0.5) * 2; // vx
-                particleData[idx + 3] = (Math.random() - 0.5) * 2; // vy
-            }
-
-            statBuffers.textContent = targetParticleCount.toLocaleString();
-            appendLog(`REALLOCATED BUFFER. ACTIVE NODES: ${targetParticleCount.toLocaleString()}`);
-        }
-
-        initParticles(targetParticleCount);
-
-        // Input synchronization handlers
-        slider.addEventListener('input', (e) => {
-            const val = parseInt(e.target.value);
-            numberInput.value = val;
-            countLabel.textContent = val.toLocaleString();
-        });
-
-        slider.addEventListener('change', (e) => {
-            initParticles(parseInt(e.target.value));
-        });
-
-        numberInput.addEventListener('change', (e) => {
-            let val = parseInt(e.target.value);
-            if (isNaN(val)) val = 1;
-            if (val > 5000000) val = 5000000;
-            if (val < 1) val = 1;
-            numberInput.value = val;
-            slider.value = val;
-            countLabel.textContent = val.toLocaleString();
-            initParticles(val);
-        });
-
-        setBtn.addEventListener('click', () => {
-            let val = parseInt(numberInput.value);
-            if (isNaN(val)) val = 1;
-            if (val > 5000000) val = 5000000;
-            if (val < 1) val = 1;
-            slider.value = val;
-            countLabel.textContent = val.toLocaleString();
-            initParticles(val);
-        });
-
-        toggleBtn.addEventListener('click', () => {
-            isRunning = !isRunning;
-            toggleBtn.textContent = isRunning ? "PAUSE" : "RESUME";
-            appendLog(`STATE CHANGED: ${isRunning ? 'RUNNING' : 'PAUSED'}`);
-        });
-
-        resetBtn.addEventListener('click', () => {
-            initParticles(targetParticleCount);
-            appendLog(`STATE RESET FOR ${targetParticleCount.toLocaleString()} NODES.`);
-        });
-
-        // Performance benchmarking variables
-        let lastTime = performance.now();
-        let frameCount = 0;
-        let fpsTimer = 0;
-
-        // Main execution loop
-        function loop(timestamp) {
-            const delta = timestamp - lastTime;
-            lastTime = timestamp;
-
-            fpsTimer += delta;
-            frameCount++;
-
-            if (fpsTimer >= 1000) {
-                const fps = (frameCount * 1000) / fpsTimer;
-                fpsDisplay.textContent = `FPS: ${fps.toFixed(1)}`;
-                statFrametime.textContent = `${delta.toFixed(1)}ms`;
-                frameCount = 0;
-                fpsTimer = 0;
-            }
-
-            // Clear canvas via fast direct fill
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            if (isRunning && particleData.length > 0) {
-                const w = canvas.width;
-                const h = canvas.height;
-                const len = particleData.length;
-
-                // Render loop batching pixels directly for raw performance
-                ctx.fillStyle = '#666666';
-                
-                // For high particle loads, direct fillRect or ImageData optimization can be used.
-                // Using standard loops optimized over TypedArrays.
-                for (let i = 0; i < len; i += 4) {
-                    let x = particleData[i] + particleData[i + 2];
-                    let y = particleData[i + 1] + particleData[i + 3];
-
-                    // Boundary checks
-                    if (x < 0) x = w;
-                    else if (x > w) x = 0;
-                    if (y < 0) y = h;
-                    else if (y > h) y = 0;
-
-                    particleData[i] = x;
-                    particleData[i + 1] = y;
-
-                    // Draw 1x1 rect particle node
-                    ctx.fillRect(x, y, 1, 1);
-                }
-            }
-
-            requestAnimationFrame(loop);
-        }
-
-        requestAnimationFrame(loop);
-        appendLog("DIAGNOSTIC ENGINE STARTED SUCCESSFULLY.");
-    </script>
+        status.textContent = `Done. ${count.toLocaleString()} particles drawn.`;
+        btn.disabled = false;
+      });
+    });
+  </script>
 </body>
 </html>
