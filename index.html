@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>200 Million Particles Flow Simulation</title>
+    <title>100 Million Particles Flow Simulation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -56,8 +56,8 @@
             </p>
         </div>
 
-        <button id="load-btn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold shadow-lg glow-btn transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center space-x-2">
-            <span>Load 200 Million Particles</span>
+        <button id="load-btn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold shadow-lg glow-btn transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-100 cursor-pointer flex items-center justify-center space-x-2">
+            <span>Load 100 Million Particles</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
 
@@ -230,8 +230,8 @@
         }
 
         function generateParticles() {
-            // 200 Million particles configuration (Allocates ~1.2GB+ raw buffer data on GPU VRAM)
-            const count = 200000000;
+            // 100 Million particles configuration (Allocates ~1.2GB+ raw buffer data on GPU VRAM)
+            const count = 100000000;
             
             particleGeometry = new THREE.BufferGeometry();
             
@@ -316,7 +316,7 @@
                 progressBar.style.width = progress + '%';
                 if (progress > 60) loadingStatus.textContent = "Allocating 100M Particle VRAM Arrays...";
                 else if (progress > 30) loadingStatus.textContent = "Constructing Multi-Threaded Vortex Fields...";
-            }, 200);
+            }, 100);
         });
 
         function onWindowResize() {
